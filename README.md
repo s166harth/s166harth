@@ -1,9 +1,9 @@
 # Hi, I'm Siddharth Sagar
 
-**AI systems engineer** — rendering pipelines, AI tooling infrastructure, and analysis
-engines. I work at the layer where a system either survives contact with real data and
-real hardware, or gets quietly abandoned: in-process memory behaviour, video encode paths,
-local inference latency, and the glue that lets a whole team share one agent.
+I build software that has to work when it counts — video tools, AI helpers, and the
+plumbing underneath them. The part I actually enjoy is the unglamorous bit: finding out
+why something is slow, why it runs out of memory, or why it works on my machine and
+nowhere else.
 
 Industrial data platforms, 2023–present. Bengaluru, India.
 
@@ -16,130 +16,144 @@ Industrial data platforms, 2023–present. Bengaluru, India.
 
 ---
 
+Nine things I've built, best first.
+
 ### Omninix — a NixOS host for desktop-shell plugins ![score 9/10](https://img.shields.io/badge/score-9%2F10-brightgreen)
 
-Runs third-party desktop-shell plugins on NixOS with no Arch and no rebuild: a QML plugin
-portal, a host runtime, and an 861-line CLI that installs plugins straight from a remote
-catalog into nix store paths.
+Desktop plugins normally only run on one particular Linux system. I built the piece that
+lets them run on a different one, without rebuilding your whole computer and without
+switching systems: a loader that runs the plugins, a host program to keep them alive, and
+a small installer that pulls plugins from an online catalogue into the right place.
 
-- 4,642 lines of host/portal/CLI code + 3,280 lines of tests; 5 hermetic suites, 552 assertions green
-- 6 real third-party plugins installed and mounted; per-plugin divergence ledger recorded
-- Stack: QML (Quickshell 0.3.0), bash + jq, home-manager module; gaps documented in a public roadmap
+- 4,642 lines of the main code, plus 3,280 lines of automated tests — 5 test suites, 552 checks, all green
+- 6 real plugins written by other people, installed and working, with a record of how each one differs from the original
+- Built with QML, bash and Nix; what doesn't work yet is written down in a public list
 
 ### OOM forensics in a GPU video renderer ![score 9/10](https://img.shields.io/badge/score-9%2F10-brightgreen)
 
-Diagnosed recurring out-of-memory kills in a Rust + Skia renderer to a measured ~16 MB
-retained per rendered frame, then made a 1,800-frame 1080p60 render fit a 7 GB machine by
-chunking pass two into fresh processes and concatenating losslessly.
+A video tool I use kept getting killed by the computer for using too much memory. Instead
+of guessing, I measured it: every frame it drew left behind about 16 MB that was never let
+go of. A 1,800-frame video would have needed roughly 30 GB. So I split the work into 15
+short chunks, ran each one in a fresh process, and glued the pieces back together — the
+whole thing fit on a 7 GB laptop.
 
-- RSS climb measured at frame counts: 1.67 GB at 60 frames → 4.95 GB at 240 frames; kernel kill at 5.38 GB
-- Fix: 15 × 2 s chunks, peak 2.73 GB each, `ffmpeg -f concat -c copy`, frame-exact 1,800-frame join
-- Ruled out decoder ring, parallelism and source resolution by controlled measurement before changing code
+- Memory measured as it grew: 1.67 GB after 60 frames, 4.95 GB after 240, and the computer killed the program at 5.38 GB
+- The fix: 15 chunks of 2 seconds each, at most 2.73 GB at a time, joined without re-encoding into exactly 1,800 frames
+- I tested and ruled out three other suspects — the video decoder, running things in parallel, and a smaller source file — before touching any code
 
 ### AI session vault — Postgres + full-text + MCP ![score 8/10](https://img.shields.io/badge/score-8%2F10-success)
 
-A Nix-bootstrapped Postgres vault that idempotently ingests AI coding sessions from five
-providers and three machines into one content-hashed, full-text-searchable, MCP-queryable
-store — no Docker, no root, PGDATA inside the repo tree.
+I keep every conversation I've had with AI coding helpers — five different tools, on
+three different computers — in one searchable database: 435 conversations, 67,640
+messages. I can search it all from the terminal, or hook it up to an AI assistant so it
+can answer questions about my own past work. Running it twice changes nothing, so I can
+run it as often as I like.
 
-- 435 sessions / 67,640 messages / 92 project directories across 3 hosts, ingested and re-verified idempotently
-- Re-ingest is a 0-write no-op; per-(provider, host, source) staleness drives auto-refresh on every read path
-- ~2,900 lines Python + Nix flake; 6 MCP tools; 3 ordered migrations with a tsvector/GIN index
+- 435 conversations, 67,640 messages, 92 project folders, 3 computers — all in one place, checked twice
+- Import the same files again and it writes nothing at all
+- Written in Python on Postgres, with 6 tools for AI assistants; no Docker needed
 
 ### laya-doomlite — a local model plays a real-time game ![score 8/10](https://img.shields.io/badge/score-8%2F10-success)
 
-Extended an MLX typed-decision engine with a second game: an ASCII raycast dungeon where a
-pretrained, game-untrained model scores planner-described actions behind an admissibility
-shield, offline.
+A small AI model that has never seen a game plays a simple dungeon crawler, entirely on
+this laptop with no internet. It reads what the game describes in front of it and picks
+moves, one at a time, fast enough to keep up.
 
-- Headless run: 1,348 ticks at 29.93/s, 360 decisions at 7.99/s, 73.8 ms mean inference, 0 deaths
-- Suite 173 → 175 passing, ruff clean; every replay number streams to JSONL
-- Committed on top of a public Apache-2.0 engine with attribution kept
+- A full run: 1,348 game steps, 360 decisions, 73.8 ms per decision on average, and it never died
+- 175 automated tests pass; every run is saved to a file so the numbers can be checked
+- Built on top of a public game engine (Apache-2.0) with the credit kept where it belongs
 
 ### Two-pass launch-teaser pipeline (Rust + Skia + numpy audio) ![score 8/10](https://img.shields.io/badge/score-8%2F10-success)
 
-Built a from-scratch video pipeline: an SVG terminal pass plus a 146-line shader optics
-pass, plus a deterministic numpy soundtrack — every on-screen figure harvested from the
-live tool being showcased.
+I made a 30-second promo video by writing a program instead of using an editor: one pass
+draws a retro computer terminal, a second pass adds camera-lens effects, and the music is
+generated from numbers rather than audio files. Every figure you see on screen was read
+from the real tool while it was running.
 
-- Delivered 1920x1080 at 60 fps, exactly 1,800 frames / 30.000 s, −15.0 LUFS / −2.6 dBTP true peak
-- Size chosen from a measured CRF curve: CRF 21 → 37.6 MB, CRF 24 → 10.43 MB against a 15 MB budget
-- Soundtrack renders from a 90-cue cut list; byte-identical across runs
+- 1,800 frames, exactly 30 seconds, 1080p at 60 fps, and the loudness is set to the broadcast standard
+- File size chosen from a measured trade-off: 37.6 MB at one quality setting versus 10.43 MB at another, against a 15 MB budget
+- The soundtrack comes from a 90-cue list and is written the same way every time — run it twice and you get identical bytes
 
 ### Apple-Silicon → Linux/Vulkan renderer port ![score 8/10](https://img.shields.io/badge/score-8%2F10-success)
 
-Ported an Apple-Silicon-only Rust + Skia video renderer to Linux by swapping three backend
-calls, then proved it end to end inside a hermetic nix shell.
+A video tool only ran on Macs. I got it running on Linux by changing the three places
+where it talks to the graphics card, then built everything from source inside a sealed
+environment to prove it still works.
 
-- Cold build 11m17s (skia-safe 0.153.3 + ffmpeg 9.0.0 built from source), no OOM
-- Full two-pass pipeline in 84 s: 3840x2160 SVG pass + 1080p shader pass, master at −14.0 LUFS
-- Port preserved as a 232-line patch including the lockfile
+- A full build from nothing took 11m17s, including two large libraries compiled from source
+- The whole two-stage video pipeline runs in 84 seconds
+- The change is kept as a 232-line patch, so anyone else can apply the same fix
 
 ### All-Track — personal analytics platform ![score 7/10](https://img.shields.io/badge/score-7%2F10-yellowgreen)
 
-An own public-facing personal analytics site plus the pipeline feeding it: five themes
-chosen per load, an interactive theme gate, AES-GCM-encrypted payloads with decoy
-responses and scraper traps.
+A personal website about my music, books, films and articles, with the data pipeline
+behind it. Five different looks, picked at random on each visit; the data is encrypted,
+and anything that looks like a scraper gets fed fake data instead.
 
-- React 19 + Vite SPA (~28 components) + Flask API over a document store; serverless deploy
-- Payloads decrypted in-browser with WebCrypto; unauthenticated callers get decoy data
-- Currently offline on a hosting quota — held back from the live links until redeployed
+- Website in React with 28 building-block components, plus a Python backend that does the work
+- The data is unlocked inside your own browser, not on my server
+- Offline at the moment because the free hosting ran out of room
 
 ### casita architecture seminar ![score 7/10](https://img.shields.io/badge/score-7%2F10-yellowgreen)
 
-Distilled a 170k-line Rust verified content-addressed store into a 13-unit, 742-line
-graduate seminar — identity, write/read paths, retention, sync, GC, benchmarking — every
-claim pinned to a file path or a runnable command.
+A 170,000-line piece of storage software, explained in 13 lessons for graduate students:
+how it names files, how it saves and reads them, how it cleans up after itself, how it
+syncs between machines. Every statement points at a file or a command you can run
+yourself.
 
-- 161k lines in the main crate alone; the repo's 338 unit tests mapped into the units
-- Grading rubric lifted from the repo's own "performance work must land as runnable benchmark cases" rule
-- Presented as teaching material about a public codebase, not as own code
+- The main part alone is 161k lines, and the project's own 338 tests are mapped into the lessons
+- The grading rules came from the project's own rule: if a claim is about speed, prove it with a benchmark you can run
+- This is teaching material about someone else's public code, and I say so plainly
 
 ### NixOS/home-manager desktop engineering ![score 6/10](https://img.shields.io/badge/score-6%2F10-yellow)
 
-A multi-host NixOS + Home Manager flake whose value is the hard parts: evdev-layer key
-remapping with a separate virtual-keyboard profile for remote streaming, KMS-capture on a
-hybrid-GPU laptop, and restart-proof user services.
+My whole computer setup — the keys, the screen capture, the background services — is
+written down as one text file, so setting up a new machine takes twenty minutes instead
+of a weekend.
 
-- Own modules: keyd remap profile, Sunshine capture service, Quickshell user service, tailscale
-- Verified by evaluation on the live tree; rejected alternatives and upstream renames recorded in module comments
-- Upstream fork bulk excluded from the claim on purpose
+- My own pieces: turning the caps-lock key into a command key, capturing the screen for streaming, and services that bring themselves back when they die
+- Checked by actually building it on a real machine, not just by reading it
+- I take credit only for my own parts, not for the big project they plug into
 
 ---
 
 ## How I work
 
-- **Measure before changing code.** The OOM fix above survived because decoder ring,
-  parallelism and source resolution were ruled out by controlled measurement first — the
-  leak was in retention, not in the pipeline everyone suspected.
-- **Reproduce before claiming.** Frame-exact joins, byte-identical soundtracks and 0-write
-  re-ingests are the kind of claim I only make with a command behind it.
-- **Boring over clever.** The 861-line CLI, the tsvector/GIN index and the restart-proof
-  user services are deliberately unexciting: they are the parts that still work in month
-  six.
+- **I measure before I change anything.** When that video tool kept crashing, I didn't
+  touch the code until I'd proved the leak was in the frame cache and not in the video
+  decoder everyone suspected.
+- **I don't claim something works until I've run it.** Frame-exact joins, identical
+  soundtracks and no-op re-imports are the kind of thing I only say with the output in
+  front of me.
+- **I pick boring tools on purpose.** A plain command-line installer and a database index
+  are less exciting than a rewrite, and they still work in six months.
 
 ## Stack
 
 Python · Rust · Go · TypeScript · QML · Bash · SQL
-Flask/FastAPI · PostgreSQL · Redis · Nix · Docker · Playwright/pytest · Jenkins CI
-Skia + ffmpeg video pipelines · Prometheus/Grafana/Loki · MCP tooling
+Web and data: Flask, FastAPI, React, PostgreSQL, Redis
+Running things: Nix, Docker, Linux, CI/CD
+Video: Skia and ffmpeg pipelines
+Watching things: Prometheus, Grafana, Loki
+Checking things: pytest, Playwright
 
 ## Scoring rubric
 
-Scores rank showcase value for AI-systems roles. They are my own judgement, not an
-objective metric.
+The number next to each project is my own ranking of how much it shows off, best first.
+It's a judgement call, not a measurement.
 
-| Score | Meaning |
+| Score | What it means |
 |---|---|
-| 9–10 | public, original systems-level work with reproduced measurements |
-| 8 | public and substantial |
-| 7 | real but narrower in scope, audience, or novelty |
-| ≤6 | supporting, teaching, or single-purpose work |
+| 9–10 | My own work, built from scratch, with measurements anyone can repeat |
+| 8 | Solid and substantial |
+| 7 | Real, but smaller in scope |
+| ≤6 | Supporting, teaching, or one-purpose |
 
 ## Contact
 
-Email `siddharthsagar2019@gmail.com` · GitHub [`github.com/s166harth`](https://github.com/s166harth)
-· `siddharthsagar.uk` (currently offline)
+Email is the fastest way to reach me: `siddharthsagar2019@gmail.com`. My code is on
+GitHub as [`github.com/s166harth`](https://github.com/s166harth). My old site,
+`siddharthsagar.uk`, is offline right now.
 
-Some work is intentionally absent from this page: it is confidential under employment, or
-it is personal. That is a boundary, not an omission.
+Some work isn't on this page on purpose — it belongs to the companies I've worked for, or
+it's personal. That's a choice, not an oversight.
