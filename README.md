@@ -16,12 +16,6 @@ Industrial data platforms, 2023–present. Bengaluru, India.
 
 ---
 
-## Selected work
-
-Ranked by showcase score, highest first (rubric at the bottom). Everything here is public
-code, public OSS, or teaching material. Work for industrial data platforms is
-confidential under employment and is deliberately absent from this page.
-
 ### Omninix — a NixOS host for desktop-shell plugins ![score 9/10](https://img.shields.io/badge/score-9%2F10-brightgreen)
 
 Runs third-party desktop-shell plugins on NixOS with no Arch and no rebuild: a QML plugin
@@ -100,34 +94,6 @@ claim pinned to a file path or a runnable command.
 - 161k lines in the main crate alone; the repo's 338 unit tests mapped into the units
 - Grading rubric lifted from the repo's own "performance work must land as runnable benchmark cases" rule
 - Presented as teaching material about a public codebase, not as own code
-
-### TSBS benchmark target — Go ![score 7/10](https://img.shields.io/badge/score-7%2F10-yellowgreen)
-
-Added a complete TDengine target to the open-source Time Series Benchmark Suite:
-line-protocol serializer, schemaless REST loader, devops and IoT SQL generators, query
-runner.
-
-- One commit: 27 files, +2,539 lines, registered across constants, factories and the Makefile
-- Audited a second target down to exact interface contracts; found 3 silently-broken upstream query types
-- Campaign work behind it: 113 recorded runs, 4 suites (devops matrix, IoT set, concurrency sweep) with methodology footnotes
-
-### ccgo — one agent, a whole team ![score 7/10](https://img.shields.io/badge/score-7%2F10-yellowgreen)
-
-A FastAPI host that shares one AI coding agent across a team: mDNS discovery, token login,
-a WebSocket-driven browser terminal and chat UI, tmux PTY bridging, and per-developer
-handoff records fetched by each client's local agent over an MCP bridge.
-
-- Three architecture iterations in two weeks (LAN share → host brain → native host daemon)
-- Real pytest suite across host API, web, sessions and mounts; recorded demo fixtures for the docs
-
-### Structured decision-model triage ![score 6/10](https://img.shields.io/badge/score-6%2F10-yellow)
-
-Two sibling prototypes that route incidents through decision models with no free-text
-output — a Cloudflare Worker in TypeScript and a Python port over a keyless public
-inference space — with the routing logic kept pure and unit-tested.
-
-- Worker: 13/13 tests; second prototype verified live at 1.5 s for a 62-token triage with calibrated confidence
-- Router decisions decoupled from the model wire format, so either backend swaps without touching logic
 
 ### NixOS/home-manager desktop engineering ![score 6/10](https://img.shields.io/badge/score-6%2F10-yellow)
 
